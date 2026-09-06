@@ -13,7 +13,7 @@ mongoose.connect(mongoURI)
     .then(() => console.log('✅ MongoDB Database வெற்றிகரமாக இணைக்கப்பட்டது!'))
     .catch((err) => console.error('❌ Database Connection Error:', err));
 
-// 2. ஆர்டர் Schema (பழையது)
+// 2. ஆர்டர் Schema 
 const orderSchema = new mongoose.Schema({
     id: String,
     customerDetails: String,
@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
 });
 const Order = mongoose.model('Order', orderSchema);
 
-// 3. ஆர்டரை Save செய்வதற்கான API
+// ஆர்டரை Save செய்வதற்கான API
 app.post('/api/orders', async (req, res) => {
     try {
         const newOrder = new Order(req.body);
@@ -37,7 +37,7 @@ app.post('/api/orders', async (req, res) => {
     }
 });
 
-// 4. ஆர்டர்களை எடுக்கும் API
+// ஆர்டர்களை எடுக்கும் API
 app.get('/api/orders', async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
@@ -48,10 +48,9 @@ app.get('/api/orders', async (req, res) => {
 });
 
 // ==========================================
-// புதிதாக சேர்க்கப்பட்ட மாத்திரைகளுக்கான கோடு (MEDICINES)
+// மாத்திரைகளுக்கான கோடு (MEDICINES) - EDIT & DELETE சேர்க்கப்பட்டுள்ளது
 // ==========================================
 
-// 5. Medicine Schema (மாத்திரைகளுக்கான கட்டமைப்பு)
 const medicineSchema = new mongoose.Schema({
     name: String,
     category: String,
@@ -62,7 +61,7 @@ const medicineSchema = new mongoose.Schema({
 });
 const Medicine = mongoose.model('Medicine', medicineSchema);
 
-// 6. மாத்திரைகளை Database-லிருந்து எடுப்பதற்கான API (GET)
+// மாத்திரைகளை எடுப்பதற்கான API (GET)
 app.get('/api/medicines', async (req, res) => {
     try {
         const meds = await Medicine.find();
@@ -72,7 +71,7 @@ app.get('/api/medicines', async (req, res) => {
     }
 });
 
-// 7. புதிய மாத்திரையை Database-ல் Save செய்வதற்கான API (POST)
+// புதிய மாத்திரையை Save செய்வதற்கான API (POST)
 app.post('/api/medicines', async (req, res) => {
     try {
         const newMed = new Medicine(req.body);
@@ -83,9 +82,28 @@ app.post('/api/medicines', async (req, res) => {
     }
 });
 
+// **புதியது: மாத்திரையை எடிட் (Update) செய்ய (PUT API)**
+app.put('/api/medicines/:id', async (req, res) => {
+    try {
+        await Medicine.findByIdAndUpdate(req.params.id, req.body);
+        res.status(200).json({ success: true, message: 'Medicine updated globally!' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// **புதியது: மாத்திரையை டெலீட் (Delete) செய்ய (DELETE API)**
+app.delete('/api/medicines/:id', async (req, res) => {
+    try {
+        await Medicine.findByIdAndDelete(req.params.id);
+        res.status(200).json({ success: true, message: 'Medicine deleted globally!' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ==========================================
 
-// சர்வரை ஸ்டார்ட் செய்ய (Render-க்காக மாற்றப்பட்டுள்ளது)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Backend Server is running on port ${PORT}`);
