@@ -4,16 +4,15 @@ const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// 1. உங்களின் MongoDB Connection String
 const mongoURI = 'mongodb://vinothvinoth8187_db_user:vinoth123@ac-iszq5xc-shard-00-00.n80b29f.mongodb.net:27017,ac-iszq5xc-shard-00-01.n80b29f.mongodb.net:27017,ac-iszq5xc-shard-00-02.n80b29f.mongodb.net:27017/medicineApp?ssl=true&replicaSet=atlas-56hbho-shard-0&authSource=admin&appName=Cluster0';
 
 mongoose.connect(mongoURI)
-    .then(() => console.log('✅ MongoDB Database வெற்றிகரமாக இணைக்கப்பட்டது!'))
+    .then(() => console.log('✅ MongoDB Database Connected!'))
     .catch((err) => console.error('❌ Database Connection Error:', err));
 
-// 2. ஆர்டர் Schema 
 const orderSchema = new mongoose.Schema({
     id: String,
     customerDetails: String,
@@ -22,11 +21,10 @@ const orderSchema = new mongoose.Schema({
     deliveryTime: String,
     status: { type: String, default: 'Active' },
     cancelReason: String,
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now } // ஆர்டர் செய்த நேரம் இதில் பதிவாகும்
 });
 const Order = mongoose.model('Order', orderSchema);
 
-// ஆர்டரை Save செய்வதற்கான API
 app.post('/api/orders', async (req, res) => {
     try {
         const newOrder = new Order(req.body);
@@ -37,7 +35,6 @@ app.post('/api/orders', async (req, res) => {
     }
 });
 
-// ஆர்டர்களை எடுக்கும் API
 app.get('/api/orders', async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
@@ -47,21 +44,19 @@ app.get('/api/orders', async (req, res) => {
     }
 });
 
-// ==========================================
-// மாத்திரைகளுக்கான கோடு (MEDICINES) - EDIT & DELETE சேர்க்கப்பட்டுள்ளது
-// ==========================================
-
+// மாத்திரைகளுக்கான கோடு (புதிய அப்டேட்)
 const medicineSchema = new mongoose.Schema({
     name: String,
     category: String,
     price: Number,
     company: String,
     dosage: String,
+    batchNo: String,     // NEW: பேட்ச் நம்பர்
+    expiryDate: String,  // NEW: எக்ஸ்பயரி டேட்
     image: String
 });
 const Medicine = mongoose.model('Medicine', medicineSchema);
 
-// மாத்திரைகளை எடுப்பதற்கான API (GET)
 app.get('/api/medicines', async (req, res) => {
     try {
         const meds = await Medicine.find();
@@ -71,7 +66,6 @@ app.get('/api/medicines', async (req, res) => {
     }
 });
 
-// புதிய மாத்திரையை Save செய்வதற்கான API (POST)
 app.post('/api/medicines', async (req, res) => {
     try {
         const newMed = new Medicine(req.body);
@@ -82,7 +76,6 @@ app.post('/api/medicines', async (req, res) => {
     }
 });
 
-// **புதியது: மாத்திரையை எடிட் (Update) செய்ய (PUT API)**
 app.put('/api/medicines/:id', async (req, res) => {
     try {
         await Medicine.findByIdAndUpdate(req.params.id, req.body);
@@ -92,7 +85,6 @@ app.put('/api/medicines/:id', async (req, res) => {
     }
 });
 
-// **புதியது: மாத்திரையை டெலீட் (Delete) செய்ய (DELETE API)**
 app.delete('/api/medicines/:id', async (req, res) => {
     try {
         await Medicine.findByIdAndDelete(req.params.id);
@@ -101,8 +93,6 @@ app.delete('/api/medicines/:id', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-
-// ==========================================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
